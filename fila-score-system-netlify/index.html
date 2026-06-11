@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FILA商品综合评分系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">F</div>
+          <div>
+            <h1>FILA商品评分</h1>
+            <p>抖音多店铺款号汇总</p>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="系统导航">
+          <a href="#import" class="active">数据导入</a>
+          <a href="#results">评分结果</a>
+          <a href="#rules">规则口径</a>
+          <a href="#fields">字段模板</a>
+        </nav>
+
+        <div class="summary-panel">
+          <span>已评分款号</span>
+          <strong id="styleCount">0</strong>
+          <span>平均分</span>
+          <strong id="avgScore">0.00</strong>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="toolbar">
+          <div>
+            <h2>商品综合评分系统</h2>
+            <p>一行一个商品ID，系统按统一款号自动汇总评分。</p>
+          </div>
+          <div class="toolbar-actions">
+            <button id="loadSampleBtn" type="button">载入示例</button>
+            <button id="downloadTemplateBtn" type="button">下载模板</button>
+            <label class="file-btn">
+              <input id="imageInput" type="file" accept="image/*" multiple />
+              上传图片
+            </label>
+            <button id="exportBtn" type="button" disabled>导出结果</button>
+          </div>
+        </section>
+
+        <section id="import" class="section import-grid">
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>CSV数据</h3>
+              <span>UTF-8，百分比填数值，如 92.00</span>
+            </div>
+            <div class="mode-switch" role="tablist" aria-label="导入模式">
+              <button id="csvModeBtn" class="active" type="button">导表模式</button>
+              <button id="formModeBtn" type="button">页面填写</button>
+            </div>
+
+            <div id="csvPanel">
+              <textarea id="csvInput" spellcheck="false" placeholder="粘贴CSV数据，或点击“载入示例”。"></textarea>
+              <div class="import-actions">
+                <label class="file-btn">
+                  <input id="fileInput" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+                  选择表格
+                </label>
+              </div>
+            </div>
+
+            <div id="formPanel" class="hidden">
+              <div class="manual-actions">
+                <button id="addRowBtn" type="button">新增一行</button>
+                <button id="clearRowsBtn" type="button">清空填写</button>
+              </div>
+              <div class="manual-table-wrap">
+                <table class="manual-table">
+                  <thead id="manualHead"></thead>
+                  <tbody id="manualBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="import-actions">
+              <button id="scoreBtn" type="button">计算评分</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>运行状态</h3>
+              <span id="statusText">等待导入</span>
+            </div>
+            <div id="issues" class="issues"></div>
+            <div class="metric-stack">
+              <div>
+                <span>顶级爆品</span>
+                <strong id="levelTop">0</strong>
+              </div>
+              <div>
+                <span>主力爆款</span>
+                <strong id="levelMain">0</strong>
+              </div>
+              <div>
+                <span>潜力款</span>
+                <strong id="levelPotential">0</strong>
+              </div>
+              <div>
+                <span>待处理款</span>
+                <strong id="levelRisk">0</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="results" class="section">
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>评分结果</h3>
+              <div class="filters">
+                <select id="levelFilter" aria-label="商品层级筛选">
+                  <option value="">全部层级</option>
+                  <option>顶级爆品</option>
+                  <option>主力爆款</option>
+                  <option>潜力款</option>
+                  <option>常规平销款</option>
+                  <option>待优化款</option>
+                  <option>滞销清仓款</option>
+                </select>
+                <input id="searchInput" type="search" placeholder="搜索款号/商品名" />
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>图片</th>
+                    <th>统一款号</th>
+                    <th>商品数</th>
+                    <th>店铺数</th>
+                    <th>总分</th>
+                    <th>层级</th>
+                    <th>流量</th>
+                    <th>转化</th>
+                    <th>销售</th>
+                    <th>库存</th>
+                    <th>口碑</th>
+                    <th>运营动作</th>
+                  </tr>
+                </thead>
+                <tbody id="resultBody">
+                  <tr>
+                    <td colspan="12" class="empty">暂无结果</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="rules" class="section rules-grid">
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>固定规则</h3>
+            </div>
+            <ul class="rule-list">
+              <li>评分主键：统一款号；商品ID必须识别店铺。</li>
+              <li>UV、销量、GMV按款号求和；当前可售库存按商品ID取均值。</li>
+              <li>库存周转天数 = 当前可售库存均值 / (近7日销量 / 7)。</li>
+              <li>大促爆发系数留空不计，满分按95折算回100。</li>
+              <li>近7日销量为0，库存相关三项直接计0分。</li>
+            </ul>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>分层标准</h3>
+            </div>
+            <div class="level-list">
+              <span><b>85-100</b> 顶级爆品</span>
+              <span><b>70-84</b> 主力爆款</span>
+              <span><b>55-69</b> 潜力款</span>
+              <span><b>40-54</b> 常规平销款</span>
+              <span><b>25-39</b> 待优化款</span>
+              <span><b>0-24</b> 滞销清仓款</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="fields" class="section">
+          <div class="panel">
+            <div class="panel-heading">
+              <h3>导入字段</h3>
+              <span>字段名必须与模板一致</span>
+            </div>
+            <div id="fieldChips" class="field-chips"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
